@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                // Get some code from a GitHub repository
+                git branch: 'develop',
+                    url:'https://github.com/Jaafar91/jaafar-calculator-service.git'
+
+                sh "bash ../../../../opt/maven-3.3.9/bin/mvn clean install"
+                sh "rm Dockerfile"
+
+                //script: "echo 'ADD target/$(basename ./target/*.jar) app.jar'",
+                sh "echo 'FROM openjdk:latest' >> Dockerfile"
+                sh "echo '' >> Dockerfile"
+                sh "echo 'ADD target/'\$(basename ./target/*.jar)' app.jar' >> Dockerfile"
+                sh "echo '' >> Dockerfile"
+                sh "echo 'ENTRYPOINT [\"java\",\"-jar\",\"app.jar\"]' >> Dockerfile"
+                sh "echo '' >> Dockerfile"
+                sh "echo 'EXPOSE 8080' >> Dockerfile"
+
+            /*script {
+                String filePath = "1.txt"
+                File newFile = new File(filePath)
+                newFile.write("")
+                newFile << "FROM openjdk:latest"
+                newFile << "\n\nADD target/jaafar-calculator-service-1.0-SNAPSHOT.jar app.jar"
+                newFile << "\n\nENTRYPOINT [\"java\",\"-jar\",\"app.jar\"]"
+                newFile << "\n\nEXPOSE 8081"
+            }*/
+
+            }
+
+            post {
+                success {
+                    archiveArtifacts 'target/*.jar'
+                }
+            }
+        }
+    }
+}
